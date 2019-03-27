@@ -1,9 +1,9 @@
 {
-  "name": "projectacorn",
-  "displayName": "Project Acorn",
+  "name": "__EXTENSIONNAME__",
+  "displayName": "__DISPLAYNAME__",
   "description": "An extension that helps developers get started quickly when building web apps by generating web templates which encourage best code practices.",
-  "version": "0.0.1",
-  "publisher": "Microsoft",
+  "version": "__VERSIONNUMBER__",
+  "publisher": "__PUBLISHER__",
   "aiKey": "__AIKEY__",
   "engines": {
     "vscode": "^1.30.0"
