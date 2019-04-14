@@ -22,6 +22,5 @@ export default {
 <style scoped>
 .sidebarText {
   font-weight: 500;
-  font-color: #000000;
 }
 </style>
