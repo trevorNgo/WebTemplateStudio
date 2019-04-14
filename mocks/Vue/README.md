@@ -49,7 +49,7 @@ Full documentation for deployment to Azure App Service can be found here: https:
 
 The front-end is based on [Vue CLI](https://cli.vuejs.org/), and the
 back-end is based on [Express Generator](https://expressjs.com/en/starter/generator.html). The front
-end is served on http://localhost:8080/ and the back-end on http://localhost:8081/. During local
+end is served on http://localhost:8080/ and the back-end on http://localhost:3001/. During local
 development front-end and back-end communicate via a proxy defined in the vue.config.js.
 
 ```
