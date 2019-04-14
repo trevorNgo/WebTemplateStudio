@@ -1,6 +1,6 @@
 const CONSTANTS = {};
 
-CONSTANTS.PORT = process.env.PORT || "8081";
+CONSTANTS.PORT = process.env.PORT || "3001";
 CONSTANTS.ENDPOINT = {};
 CONSTANTS.ENDPOINT.LIST = "/list";
 CONSTANTS.ENDPOINT.GRID = "/grid";
