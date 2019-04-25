@@ -22,4 +22,4 @@ The Vue templates can be run using:
 `yarn install` or `npm install`
 `yarn start` or `npm start`
 
-After starting the web app the front-end will be available at [localhost:8080](http://localhost:8080/) and the back-end will be available at [localhost:3001](http://localhost:3001/). Further details can be found in the README located in the `vue-mocks` folder
+After starting the web app the front-end will be available at [localhost:3000](http://localhost:3000/) and the back-end will be available at [localhost:3001](http://localhost:3001/). Further details can be found in the README located in the `vue-mocks` folder
