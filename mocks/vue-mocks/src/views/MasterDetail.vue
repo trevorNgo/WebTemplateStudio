@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="container-fluid">
+    <main id="mainContent" class="container-fluid">
       <div class="row">
         <div class="col-2 p-0 border-right sidebar">
           <div class="list-group list-group-flush border-bottom">
@@ -15,7 +15,7 @@
         </div>
         <MasterDetailPage v-bind:textSampleData="masterDetailText[currentDisplayTabIndex]"/>
       </div>
-    </div>
+    </main>
     <WarningMessage
       v-if="WarningMessageOpen"
       v-on:onWarningClose="handleWarningClose"

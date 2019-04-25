@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div>
+    <main id="mainContent">
       <div class="text-center header">
         <h1>Project Name</h1>
         <p>This is placeholder text. Your web app description goes here.</p>
@@ -24,7 +24,7 @@
           />
         </div>
       </div>
-    </div>
+    </main>
     <WarningMessage
       v-if="WarningMessageOpen"
       v-on:onWarningClose="handleWarningClose"

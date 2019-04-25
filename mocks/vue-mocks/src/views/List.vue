@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <main class="container" id="mainContent">
     <div class="row">
       <div class="col mt-5 p-0">
         <h3>Bootstrap List Template</h3>
@@ -19,7 +19,7 @@
         v-bind:text="WarningMessageText"
       />
     </div>
-  </div>
+  </main>
 </template>
 
 <script>
