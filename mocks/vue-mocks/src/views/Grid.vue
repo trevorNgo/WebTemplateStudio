@@ -19,8 +19,8 @@
           <GridComponent
             v-for="textAsset in gridTextAssets"
             v-bind:key="textAsset.id"
-            v-bind:header="textAsset.header"
-            v-bind:description="textAsset.description"
+            v-bind:header="textAsset.title"
+            v-bind:description="textAsset.shortDescription"
           />
         </div>
       </div>

@@ -7,7 +7,7 @@
             <MasterDetailSideBarTab
               v-for="(textAssets, index) in masterDetailText"
               v-on:onDisplayTabClick="handleDisplayTabClick"
-              v-bind:tabText="textAssets.tabName"
+              v-bind:tabText="textAssets.title"
               v-bind:index="index"
               v-bind:key="textAssets.id"
             />

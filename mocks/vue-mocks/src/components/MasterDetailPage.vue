@@ -16,8 +16,17 @@
           </ol>
         </nav>
       </div>
-      <div class="col-md-8 col-12">
-        <p class="ml-3">{{textSampleData.paragraph}}</p>
+      <div class="col-md-8 col-12 ml-3 mb-5">
+        <p class="title">Status</p>
+        <p>{{textSampleData.status}}</p>
+        <p class="title">Order Date</p>
+        <p>{{textSampleData.orderDate}}</p>
+        <p class="title">Ship To</p>
+        <p>{{textSampleData.shipTo}}</p>
+        <p class="title">Order Total</p>
+        <p>{{textSampleData.orderTotal}}</p>
+        <p class="title">Description</p>
+        <p>{{textSampleData.longDescription}}</p>
       </div>
     </div>
   </div>
@@ -33,6 +42,11 @@ export default {
 </script>
 
 <style scoped>
+.title {
+  font-weight: 700;
+  margin-bottom: 0;
+}
+
 .breadCrumbLink {
   color: #025fce;
 }
