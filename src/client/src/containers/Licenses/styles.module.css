@@ -1,7 +1,10 @@
 .title {
-  font-weight: bold;
-  margin-bottom: 3px;
-  font-size: 14px;
+  font-family: Segoe UI;
+  font-style: normal;
+  font-weight: 300;
+  margin-bottom: 6px;
+  font-size: 24px;
+  color: var(--vscode-editor-foreground);
 }
 
 .container {
@@ -9,14 +12,17 @@
   margin-bottom: 30px;
 }
 
-.link {
+.licenseButton {
   text-decoration: none;
   font-size: var(--vscode-font-size);
   color: var(--vscode-textLink-foreground);
   font-weight: var(--vscode-font-weight);
-  margin-left: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  outline: inherit;
 }
 
-.link:focus {
+.licenseButton:focus {
   outline: 1px solid var(--vscode-contrastActiveBorder);
 }

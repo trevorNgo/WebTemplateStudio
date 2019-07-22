@@ -1,12 +1,20 @@
 import { defineMessages } from "react-intl";
 
 const PAGE_DETAILS = "/PageDetail";
-const SELECT_PROJECT_TYPE = "/SelectWebApp";
 const SELECT_FRAMEWORKS = "/SelectFrameworks";
 const SELECT_PAGES = "/SelectPages";
 const AZURE_LOGIN = "/AzureLogin";
 const REVIEW_AND_GENERATE = "/ReviewAndGenerate";
 const NEW_PROJECT = "/";
+
+const PROJECT_NAME_CHARACTER_LIMIT = 50;
+
+const MAX_PAGES_ALLOWED = 20;
+
+const WEB_TEMPLATE_STUDIO_LINKS = {
+  REPO: "https://github.com/Microsoft/WebTemplateStudio",
+  ISSUES: "https://github.com/Microsoft/WebTemplateStudio/issues"
+};
 
 const PRODUCTION = "production";
 const DEVELOPMENT = "development";
@@ -18,9 +26,15 @@ const INTL_MESSAGES = defineMessages({
   }
 });
 
+const ARIA_LABELS_NAVIGATION = defineMessages({
+  ARIA_LABELS_MESSAGES: {
+    id: "ariaLabels.pageNavigation",
+    defaultMessage: "Go to {pagesText} page"
+  }
+});
+
 const ROUTES = {
   PAGE_DETAILS,
-  SELECT_PROJECT_TYPE,
   SELECT_FRAMEWORKS,
   SELECT_PAGES,
   AZURE_LOGIN,
@@ -31,7 +45,6 @@ const ROUTES = {
 // Presents the routes in the order of the wizard
 const ROUTES_ARRAY = [
   NEW_PROJECT,
-  SELECT_PROJECT_TYPE,
   SELECT_FRAMEWORKS,
   SELECT_PAGES,
   AZURE_LOGIN,
@@ -48,8 +61,20 @@ const COSMOS_APIS = {
   SQL: "SQL"
 };
 
+enum FRAMEWORK_TYPE {
+  FRONTEND = "frontend",
+  BACKEND = "backend"
+}
+
+enum KEY_EVENTS {
+  ENTER = "Enter",
+  SPACE = " ",
+  TAB = "Tab"
+}
+
 const WIZARD_CONTENT_INTERNAL_NAMES = {
   ANGULAR: "Angular",
+  APP_SERVICE: "AppService",
   AZURE: "wts.Feature.Azure",
   AZURE_FUNCTIONS: "wts.Feature.Azure.AzureFunctions",
   REACT_BLANK_PAGE: "wts.Page.React.Blank",
@@ -65,6 +90,8 @@ const WIZARD_CONTENT_INTERNAL_NAMES = {
   COSMOS_DB_SQL: "wts.Feature.Azure.Cosmos.SQL",
   FULL_STACK_APP: "FullStackWebApp",
   NODE_JS: "NodeJS",
+  FLASK: "Flask",
+  PYTHON: "Python",
   REACT_JS: "ReactJS",
   REST_API: "RestAPI",
   VUE: "Vue",
@@ -79,8 +106,11 @@ const EXTENSION_MODULES = {
   GENERATE: "GenerateExperience",
   TELEMETRY: "Telemetry",
   VALIDATOR: "Validator",
-  VSCODEUI: "VSCodeUI"
+  VSCODEUI: "VSCodeUI",
+  DEPENDENCYCHECKER: "DependencyChecker",
+  CORETS: "CoreTSModule"
 };
+
 // Define extension commands here that should be received from the extension
 const EXTENSION_COMMANDS = {
   AZURE_LOGIN: "login",
@@ -90,18 +120,22 @@ const EXTENSION_COMMANDS = {
   GET_USER_STATUS: "get-user-status",
   NAME_COSMOS: "name-cosmos",
   NAME_FUNCTIONS: "name-functions",
+  NAME_APP_SERVICE: "name-app-service",
   PROJECT_PATH_VALIDATION: "project-path-validation",
   SUBSCRIPTION_DATA_COSMOS: "subscription-data-for-cosmos",
   SUBSCRIPTION_DATA_FUNCTIONS: "subscription-data-for-functions",
+  SUBSCRIPTION_DATA_APP_SERVICE: "subscription-data-for-app-service",
   TRACK_PAGE_SWITCH: "track-page-switch",
   GEN_STATUS_MESSAGE: "update-status-message",
   GEN_STATUS: "update-status",
-  GET_PORT: "get-port",
   OPEN_PROJECT_IN_VSCODE: "open-project-vscode",
   GET_VERSIONS: "get-versions",
   CLOSE_WIZARD: "close-wizard",
   RESET_PAGES: "reset-pages",
-  GET_PREVIEW_STATUS: "get-preview"
+  GET_PREVIEW_STATUS: "get-preview",
+  GET_DEPENDENCY_INFO: "check-dependency",
+  GET_FRAMEWORKS: "get-frameworks",
+  GET_PAGES: "get-pages"
 };
 
 export {
@@ -113,6 +147,12 @@ export {
   SERVICE_KEYS,
   WIZARD_CONTENT_INTERNAL_NAMES,
   INTL_MESSAGES,
+  ARIA_LABELS_NAVIGATION,
   COSMOS_APIS,
-  DEVELOPMENT
+  DEVELOPMENT,
+  PROJECT_NAME_CHARACTER_LIMIT,
+  MAX_PAGES_ALLOWED,
+  WEB_TEMPLATE_STUDIO_LINKS,
+  FRAMEWORK_TYPE,
+  KEY_EVENTS
 };

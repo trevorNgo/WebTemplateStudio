@@ -2,13 +2,11 @@ import classnames from "classnames";
 import * as React from "react";
 import { connect } from "react-redux";
 import { withRouter } from "react-router";
-import { Route, RouteComponentProps } from "react-router-dom";
+import { Route, RouteComponentProps, Link } from "react-router-dom";
 
-import LeftSidebar from "./components/LeftSidebar";
 import PageDetails from "./containers/PageDetails";
-import SelectFrameworks from "./components/SelectFrameworks";
+import SelectFrameworks from "./containers/SelectFrameworks";
 import SelectPages from "./containers/SelectPages";
-import SelectWebApp from "./containers/SelectWebApp";
 import NewProject from "./containers/NewProject";
 import CosmosResourceModal from "./containers/CosmosResourceModal";
 import Footer from "./containers/Footer";
@@ -16,12 +14,19 @@ import Header from "./containers/Header";
 import ReviewAndGenerate from "./containers/ReviewAndGenerate";
 import RightSidebar from "./containers/RightSidebar";
 import PostGenerationModal from "./containers/PostGenerationModal";
+import RedirectModal from "./containers/RedirectModal";
+import ViewLicensesModal from "./containers/ViewLicensesModal";
+import AppServiceModal from "./containers/AppServiceModal";
+
+import { ReactComponent as HomeSplashSVG } from "./assets/homeSplash.svg";
+import { ReactComponent as SummarySplashSVG } from "./assets/summarySplash.svg";
 
 import {
   EXTENSION_COMMANDS,
   EXTENSION_MODULES,
   ROUTES,
-  DEVELOPMENT
+  DEVELOPMENT,
+  FRAMEWORK_TYPE
 } from "./utils/constants";
 
 import { getVSCodeApi } from "./actions/vscodeApiActions/getVSCodeApi";
@@ -30,6 +35,7 @@ import { updateOutputPathAction } from "./actions/wizardSelectionActions/updateP
 import {
   setAccountAvailability,
   setAppNameAvailabilityAction,
+  setSiteNameAvailabilityAction,
   IAvailabilityFromExtension
 } from "./actions/azureActions/setAccountAvailability";
 import AzureLogin from "./containers/AzureLogin";
@@ -41,6 +47,10 @@ import {
   updateTemplateGenerationStatusAction
 } from "./actions/wizardInfoActions/updateGenStatusActions";
 import { getVersionsDataAction } from "./actions/wizardInfoActions/getVersionData";
+import {
+  updateDependencyInfoAction,
+  IDependencyInfo
+} from "./actions/wizardInfoActions/updateDependencyInfo";
 
 import appStyles from "./appStyles.module.css";
 import { startLogOutAzure } from "./actions/azureActions/logOutAzure";
@@ -58,6 +68,11 @@ import { setPreviewStatusAction } from "./actions/wizardContentActions/setPrevie
 import { setPortAction } from "./actions/wizardContentActions/setPort";
 import { ThunkDispatch } from "redux-thunk";
 import RootAction from "./actions/ActionType";
+import TopNavBar from "./components/TopNavBar";
+import { parseFrameworksPayload } from "./utils/parseFrameworksPayload";
+import { getBackendFrameworksSuccess } from "./actions/wizardContentActions/getBackendFrameworks";
+import { getFrontendFrameworksSuccess } from "./actions/wizardContentActions/getFrontendFrameworks";
+import { getPagesOptionsAction } from "./actions/wizardContentActions/getPagesOptions";
 
 if (process.env.NODE_ENV === DEVELOPMENT) {
   require("./css/themes.css");
@@ -75,11 +90,18 @@ interface IDispatchProps {
   setAppNameAvailability: (
     isAvailableObject: IAvailabilityFromExtension
   ) => any;
+  setSiteNameAvailability: (
+    isAvailableObject: IAvailabilityFromExtension
+  ) => any;
   setProjectPathValidation: (validation: any) => void;
   setAzureValidationStatus: (status: boolean) => void;
   updateTemplateGenStatusMessage: (status: string) => any;
   updateTemplateGenStatus: (isGenerated: IServiceStatus) => any;
   getVersionsData: (versions: IVersions) => any;
+  updateDependencyInfo: (dependencyInfo: IDependencyInfo) => any;
+  getBackendFrameworksSuccess: (frameworks: IOption[]) => any;
+  getFrontendFrameworksSuccess: (frameworks: IOption[]) => any;
+  getPages: (pages: IOption[]) => any;
   resetPageSelection: () => any;
   selectFrontend: (frontendFramework: ISelected) => any;
   setPreviewStatus: (isPreview: boolean) => void;
@@ -105,6 +127,9 @@ class App extends React.Component<Props> {
     setAppNameAvailability: () => {},
     setProjectPathValidation: () => {},
     setAzureValidationStatus: () => {},
+    updateDependencyInfo: () => {},
+    getBackendFrameworksSuccess: () => {},
+    getFrontendFrameworksSuccess: () => {},
     updateTemplateGenStatusMessage: () => {},
     updateTemplateGenStatus: () => {},
     getVersionsData: () => {},
@@ -118,6 +143,29 @@ class App extends React.Component<Props> {
     window.addEventListener("message", event => {
       const message = event.data;
       switch (message.command) {
+        // get frameworks from extension message
+        case EXTENSION_COMMANDS.GET_FRAMEWORKS:
+          this.props.getFrontendFrameworksSuccess(
+            parseFrameworksPayload(
+              message.payload.frameworks,
+              FRAMEWORK_TYPE.FRONTEND,
+              message.payload.isPreview
+            )
+          );
+          this.props.getBackendFrameworksSuccess(
+            parseFrameworksPayload(
+              message.payload.frameworks,
+              FRAMEWORK_TYPE.BACKEND,
+              message.payload.isPreview
+            )
+          );
+          break;
+        case EXTENSION_COMMANDS.GET_PAGES:
+          this.props.getPages(message.payload.pages);
+          break;
+        case EXTENSION_COMMANDS.GET_DEPENDENCY_INFO:
+          this.props.updateDependencyInfo(message.payload);
+          break;
         case EXTENSION_COMMANDS.GET_OUTPUT_PATH:
           if (message.payload != null && message.payload.outputPath != null) {
             this.props.updateOutputPath(message.payload.outputPath);
@@ -134,10 +182,14 @@ class App extends React.Component<Props> {
           }
           break;
         case EXTENSION_COMMANDS.AZURE_LOGOUT:
-          this.props.startLogOutToAzure();
+          // Update UI only if user sign out is confirmed by the extension
+          if (message.payload) {
+            this.props.startLogOutToAzure();
+          }
           break;
         case EXTENSION_COMMANDS.SUBSCRIPTION_DATA_FUNCTIONS:
         case EXTENSION_COMMANDS.SUBSCRIPTION_DATA_COSMOS:
+        case EXTENSION_COMMANDS.SUBSCRIPTION_DATA_APP_SERVICE:
           // Expect resource groups and locations on this request
           // Receive resource groups and locations
           // and update redux (resourceGroups, locations)
@@ -157,9 +209,15 @@ class App extends React.Component<Props> {
           });
           this.props.setAzureValidationStatus(false);
           break;
-
         case EXTENSION_COMMANDS.NAME_FUNCTIONS:
           this.props.setAppNameAvailability({
+            isAvailable: message.payload.isAvailable,
+            message: message.payload.reason
+          });
+          this.props.setAzureValidationStatus(false);
+          break;
+        case EXTENSION_COMMANDS.NAME_APP_SERVICE:
+          this.props.setSiteNameAvailability({
             isAvailable: message.payload.isAvailable,
             message: message.payload.reason
           });
@@ -206,9 +264,6 @@ class App extends React.Component<Props> {
         case EXTENSION_COMMANDS.GET_PREVIEW_STATUS:
           this.props.setPreviewStatus(message.payload.preview);
           break;
-        case EXTENSION_COMMANDS.GET_PORT:
-          this.props.setPort(message.payload.port);
-          break;
       }
     });
   }
@@ -229,17 +284,36 @@ class App extends React.Component<Props> {
     return (
       <React.Fragment>
         <Header />
+        <TopNavBar />
+
         <div className={appStyles.container}>
           <CosmosResourceModal />
           <AzureFunctionsModal />
           <PostGenerationModal />
-          <LeftSidebar />
+          <RedirectModal />
+          <ViewLicensesModal />
+          <AppServiceModal />
 
           <main
             className={classnames(appStyles.centerView, {
-              [appStyles.centerViewMaxHeight]: pathname === ROUTES.PAGE_DETAILS
+              [appStyles.centerViewMaxHeight]: pathname === ROUTES.PAGE_DETAILS,
+              [appStyles.centerViewAzurePage]: pathname === ROUTES.AZURE_LOGIN
             })}
           >
+            {pathname === ROUTES.NEW_PROJECT ? (
+              <HomeSplashSVG
+                className={classnames(appStyles.splash, appStyles.homeSplash)}
+              />
+            ) : null}
+
+            {pathname === ROUTES.REVIEW_AND_GENERATE ? (
+              <SummarySplashSVG
+                className={classnames(
+                  appStyles.splash,
+                  appStyles.summarySplash
+                )}
+              />
+            ) : null}
             <Route path={ROUTES.PAGE_DETAILS} component={PageDetails} />
             <Route path={ROUTES.AZURE_LOGIN} component={AzureLogin} />
             <Route
@@ -251,8 +325,11 @@ class App extends React.Component<Props> {
               component={SelectFrameworks}
             />
             <Route path={ROUTES.SELECT_PAGES} component={SelectPages} />
-            <Route path={ROUTES.SELECT_PROJECT_TYPE} component={SelectWebApp} />
-            <Route exact={true} path={ROUTES.NEW_PROJECT} component={NewProject} />
+            <Route
+              exact={true}
+              path={ROUTES.NEW_PROJECT}
+              component={NewProject}
+            />
           </main>
           <RightSidebar />
         </div>
@@ -262,7 +339,9 @@ class App extends React.Component<Props> {
   }
 }
 
-const mapDispatchToProps = (dispatch: ThunkDispatch<AppState, void, RootAction>): IDispatchProps => ({
+const mapDispatchToProps = (
+  dispatch: ThunkDispatch<AppState, void, RootAction>
+): IDispatchProps => ({
   getVSCodeApi: () => {
     dispatch(getVSCodeApi());
   },
@@ -278,11 +357,16 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<AppState, void, RootAction>)
   updateOutputPath: (outputPath: string) => {
     dispatch(updateOutputPathAction(outputPath));
   },
-  setCosmosResourceAccountNameAvailability: (isAvailableObject: any) => {
+  setCosmosResourceAccountNameAvailability: (
+    isAvailableObject: IAvailabilityFromExtension
+  ) => {
     dispatch(setAccountAvailability(isAvailableObject));
   },
-  setAppNameAvailability: (isAvailableObject: any) => {
+  setAppNameAvailability: (isAvailableObject: IAvailabilityFromExtension) => {
     dispatch(setAppNameAvailabilityAction(isAvailableObject));
+  },
+  setSiteNameAvailability: (isAvailableObject: IAvailabilityFromExtension) => {
+    dispatch(setSiteNameAvailabilityAction(isAvailableObject));
   },
   setProjectPathValidation: (validation: any) => {
     dispatch(setProjectPathValidation(validation));
@@ -295,6 +379,18 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<AppState, void, RootAction>)
   },
   updateTemplateGenStatus: (isGenerated: IServiceStatus) => {
     dispatch(updateTemplateGenerationStatusAction(isGenerated));
+  },
+  updateDependencyInfo: (dependencyInfo: IDependencyInfo) => {
+    dispatch(updateDependencyInfoAction(dependencyInfo));
+  },
+  getBackendFrameworksSuccess: (frameworks: IOption[]) => {
+    dispatch(getBackendFrameworksSuccess(frameworks));
+  },
+  getFrontendFrameworksSuccess: (frameworks: IOption[]) => {
+    dispatch(getFrontendFrameworksSuccess(frameworks));
+  },
+  getPages: (pages: IOption[]) => {
+    dispatch(getPagesOptionsAction(pages));
   },
   getVersionsData: (versions: IVersions) => {
     dispatch(getVersionsDataAction(versions));

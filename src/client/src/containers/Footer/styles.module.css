@@ -8,17 +8,21 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 50px;
+  min-height: 65px;
   box-sizing: border-box;
 }
 
 .button {
-  margin-left: 1em;
-  font-size: 1em;
+  margin-right: 1em;
+  text-align: center;
 }
 
 .button:hover {
   color: #ffffff;
+}
+
+.buttonNext {
+  min-width: 80px;
 }
 
 .button:focus {
@@ -30,7 +34,26 @@
   align-items: center;
 }
 
+.nextIcon {
+  margin-left: 10px;
+  height: 16px;
+}
+
+.nextIcon path {
+  fill: var(--vscode-editor-foreground);
+}
+
+.nextIconNotDisabled path {
+  fill: #ffffff;
+}
+
 .disabledOverlay {
   opacity: 0.5;
   outline: 0px;
+}
+
+@media (min-width: 730px) {
+  .button {
+    font-size: 1.4em;
+  }
 }

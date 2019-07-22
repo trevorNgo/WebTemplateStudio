@@ -8,10 +8,12 @@ import DraggableSidebarItem from "../../components/DraggableSidebarItem";
 
 import { removeCosmosSelectionAction } from "../../actions/azureActions/saveCosmosDbSettings";
 import { ICosmosDB } from "../../reducers/wizardSelectionReducers/services/cosmosDbReducer";
+import { ReactComponent as EditIcon } from "../../assets/edit.svg";
 
 import { openCosmosDbModalAction } from "../../actions/modalActions/modalActions";
 
 import styles from "./styles.module.css";
+import { KEY_EVENTS } from "../../utils/constants";
 
 import { injectIntl, FormattedMessage, InjectedIntlProps } from "react-intl";
 import { ThunkDispatch } from "redux-thunk";
@@ -37,8 +39,8 @@ const CosmosDBSelection = ({
   intl
 }: Props) => {
   const { serviceType } = cosmosSelection.wizardContent;
-  const onEditKeyDownHandler = (event: any) => {
-    if (event.keyCode === 13 || event.keyCode === 32) {
+  const onEditKeyDownHandler = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === KEY_EVENTS.ENTER || event.key === KEY_EVENTS.SPACE) {
       openCosmosDbModal();
     }
   };
@@ -55,16 +57,14 @@ const CosmosDBSelection = ({
               onClick={openCosmosDbModal}
               onKeyDown={onEditKeyDownHandler}
             >
-              <FormattedMessage
-                id="cosmosDBSelection.edit"
-                defaultMessage="Edit"
-              />
+              <EditIcon className={styles.editIcon} />
             </div>
           </div>
           {cosmosSelection.selection.map((resource: any, idx: number) => {
             const { accountName } = resource;
             return (
               <DraggableSidebarItem
+                cosmosDB={true}
                 customInputStyle={styles.input}
                 key={accountName}
                 text={accountName}

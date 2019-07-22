@@ -15,7 +15,8 @@ import { isPostGenModalOpenSelector } from "../../selectors/modalSelector";
 import {
   EXTENSION_COMMANDS,
   EXTENSION_MODULES,
-  ROUTES
+  ROUTES,
+  WEB_TEMPLATE_STUDIO_LINKS
 } from "../../utils/constants";
 import { getVSCodeApiSelector } from "../../selectors/vscodeApiSelector";
 import { IVSCodeObject } from "../../reducers/vscodeApiReducer";
@@ -25,6 +26,8 @@ import { injectIntl, InjectedIntlProps } from "react-intl";
 import { getOutputPath } from "../../selectors/wizardSelectionSelector";
 import { strings as messages } from "./strings";
 import { resetWizardAction } from "../../actions/wizardInfoActions/resetWizardAction";
+import { MODAL_TYPES } from "../../actions/modalActions/typeKeys";
+import keyUpHandler from "../../utils/keyUpHandler";
 
 interface LinksDict {
   [serviceId: string]: string;
@@ -42,7 +45,6 @@ interface IStateProps {
   isServicesDeployed: boolean;
   templateGenStatus: string;
   isModalOpen: boolean;
-  isPostGenModalOpen: boolean;
   serviceStatus: PostGenSelectors.IAzureServiceStatus;
   isServicesSelected: boolean;
   vscode: IVSCodeObject;
@@ -73,12 +75,23 @@ const PostGenerationModal = ({
 }: Props) => {
   const { formatMessage } = intl;
   const LinkRenderer = (props: any) => (
-    <a href={props.href} className={styles.link}>
+    <a href={props.href} className={styles.link} onKeyUp={keyUpHandler}>
       {props.children}
     </a>
   );
-  const handleOpenProject = () => {
-    if (isTemplateGenerated) {
+  const handleCloseWizard = () => {
+    vscode.postMessage({
+      module: EXTENSION_MODULES.GENERATE,
+      command: EXTENSION_COMMANDS.CLOSE_WIZARD
+    });
+  };
+
+  const handleOpenProjectOrRestartWizard = () => {
+    if (isTemplatesFailed) {
+      resetWizard();
+      history.push(ROUTES.NEW_PROJECT);
+    }
+    if (!isTemplatesFailed && isTemplateGenerated) {
       vscode.postMessage({
         module: EXTENSION_MODULES.GENERATE,
         command: EXTENSION_COMMANDS.OPEN_PROJECT_IN_VSCODE,
@@ -89,33 +102,26 @@ const PostGenerationModal = ({
       });
     }
   };
-  const handleClick = () => {
-    if (isTemplatesFailed) {
-      resetWizard();
-      history.push(ROUTES.NEW_PROJECT);
-    }
-    if (isTemplateGenerated && isServicesDeployed) {
-      vscode.postMessage({
-        module: EXTENSION_MODULES.GENERATE,
-        command: EXTENSION_COMMANDS.CLOSE_WIZARD
-      });
-    }
-  };
-  const generationMessage = () => {
+  const openProjectOrRestartWizardMessage = () => {
     if (isTemplatesFailed) {
       return formatMessage(messages.restartWizard);
-    } else if (!isTemplateGenerated || !isServicesDeployed) {
-      return (
-        <React.Fragment>
-          <Spinner className={styles.spinner} />
-          {formatMessage(messages.working)}
-        </React.Fragment>
-      );
-    } else if (isTemplateGenerated && isServicesDeployed) {
-      return formatMessage(messages.closeWizard);
     }
-    return formatMessage(messages.unknownStatus);
+    if (!isTemplatesFailed && isTemplateGenerated) {
+      return formatMessage(messages.openInCode);
+    }
+    return (
+      <React.Fragment>
+        <Spinner className={styles.spinner} />
+        {formatMessage(messages.working)}
+      </React.Fragment>
+    );
   };
+
+  const handleCreateAnotherProject = () => {
+    resetWizard();
+    history.push(ROUTES.NEW_PROJECT);
+  };
+
   const renderServiceStatus = () => {
     if (isTemplatesFailed) {
       return formatMessage(messages.deploymentHalted);
@@ -159,47 +165,75 @@ const PostGenerationModal = ({
   return (
     <div>
       <div className={styles.title}>
-        {formatMessage(messages.generationStatus)}
-      </div>
-      <div className={styles.section}>
-        {formatMessage(messages.templateGeneration)}
+        {formatMessage(messages.creatingYourProject)}
       </div>
       <div className={styles.templateStatus}>
-        <div>
+        <div className={styles.sectionLine}>
           {isTemplatesFailed && formatMessage(messages.failedToGenerate)}
         </div>
         {!isTemplateGenerated && !isTemplatesFailed && (
-          <div>{templateGenStatus}</div>
+          <div className={styles.sectionLine}>{templateGenStatus}</div>
         )}
         {isTemplateGenerated && !isTemplatesFailed && (
-          <div>{formatMessage(messages.generationComplete)}</div>
-        )}
-        {isTemplateGenerated && !isTemplatesFailed && (
-          <button className={styles.openProject} onClick={handleOpenProject}>
-            {formatMessage(messages.openInCode)}
-          </button>
+          <div>
+            <p className={styles.sectionLine}>
+              {formatMessage(messages.generationComplete)}
+            </p>
+            <p className={styles.sectionLine}>
+              {formatMessage(messages.openReadMe)}
+              <span className={styles.readMeText}>
+                {formatMessage(messages.readMe)}
+              </span>
+              {formatMessage(messages.toStart)}
+            </p>
+          </div>
         )}
       </div>
       {isServicesSelected && (
-        <div>
-          <div className={styles.section}>
+        <div className={styles.section}>
+          <div className={styles.azureTitle}>
             {formatMessage(messages.azureServices)}
           </div>
-          {renderServiceStatus()}
+          <div className={styles.sectionLine}>{renderServiceStatus()}</div>
         </div>
       )}
-      <div className={styles.footerContainer}>
+      <div className={styles.section}>
+        <div className={styles.sectionLineButton}>
+          {isTemplateGenerated && !isTemplatesFailed && isServicesDeployed && (
+            <button
+              className={styles.buttonToLink}
+              onClick={handleCreateAnotherProject}
+            >
+              {formatMessage(messages.createAnotherProject)}
+            </button>
+          )}
+        </div>
+      </div>
+      <div className={styles.sectionLineButton}>
+        {isTemplateGenerated && !isTemplatesFailed && isServicesDeployed && (
+          <button
+            className={classnames(styles.buttonToLink)}
+            onClick={handleCloseWizard}
+          >
+            {formatMessage(messages.closeWizard)}
+          </button>
+        )}
+      </div>
+      <div className={styles.sectionLine}>
         <a
           className={styles.link}
-          href="https://github.com/Microsoft/WebTemplateStudio/issues"
+          href={WEB_TEMPLATE_STUDIO_LINKS.ISSUES}
+          onKeyUp={keyUpHandler}
         >
           {formatMessage(messages.help)}
         </a>
+      </div>
+      <div className={styles.footerContainer}>
         <button
           className={classnames(buttonStyles.buttonHighlighted, styles.button)}
-          onClick={handleClick}
+          onClick={handleOpenProjectOrRestartWizard}
         >
-          {generationMessage()}
+          {openProjectOrRestartWizardMessage()}
         </button>
       </div>
     </div>
@@ -208,7 +242,6 @@ const PostGenerationModal = ({
 
 const mapStateToProps = (state: AppState): IStateProps => ({
   isModalOpen: isPostGenModalOpenSelector(state),
-  isPostGenModalOpen: isPostGenModalOpenSelector(state),
   isServicesDeployed: PostGenSelectors.isServicesDeployedOrFinishedSelector(
     state
   ),
@@ -231,5 +264,5 @@ export default withRouter(
   connect(
     mapStateToProps,
     mapDispatchToProps
-  )(asModal(injectIntl(PostGenerationModal)))
+  )(asModal(injectIntl(PostGenerationModal), MODAL_TYPES.POST_GEN_MODAL))
 );

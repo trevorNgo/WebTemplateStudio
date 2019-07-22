@@ -2,16 +2,28 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2em;
+  margin-bottom: 1.5em;
+}
+
+/* scrollable part of the form */
+.bodyContainer {
+  padding-right: 20px;
+  max-height: calc(80vh - 200px);
+  overflow-y: auto;
+  margin-bottom: 5px;
 }
 
 .modalTitle {
-  font-size: 1.3em;
-  font-weight: bold;
+  font-size: 1.8em;
 }
 
 .selectionContainer {
-  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
+.leftHeader {
+  font-weight: 500;
+  font-size: 1.2em;
 }
 
 .selectionContainerDisabled {
@@ -28,14 +40,9 @@
   margin-bottom: 26px;
 }
 
-.modalFooterContainer {
-  display: flex;
-  justify-content: space-between;
-}
-
 .button {
-  margin-top: 27px;
-  font-size: 1em;
+  margin-top: 2em;
+  font-size: 1.1em;
   border: none;
   height: 50%;
   align-self: flex-end;
@@ -82,28 +89,30 @@
 }
 
 .validationIcon path {
-  fill: var(--vscode-editorMarkerNavigationWarning-background);
+  fill: var(--vscode-gitDecoration-untrackedResourceForeground);
 }
 
 .inputContainer {
   display: flex;
   align-items: center;
   width: 100%;
+  font-size: 1.2em;
   outline: none;
   padding: 9px;
   box-sizing: border-box;
-  background-color: var(--vscode-input-background);
+  background-color: var(--vscode-editor-background);
   border: 0.5px solid var(--vscode-editor-foreground);
 }
 
 .input {
   text-decoration: none;
   border: none;
-  background-color: var(--vscode-input-background);
+  background-color: var(--vscode-editor-background);
   color: var(--vscode-editor-foreground);
   font-size: 1em;
   width: 100%;
   margin-right: 10px;
+  padding: 2px 8px;
 }
 
 input:focus {
@@ -114,8 +123,13 @@ input::placeholder {
   color: var(--vscode-input-placeholderForeground);
 }
 
+.subLabel {
+  margin-bottom: 1em;
+}
+
 .createNew,
 .link {
+  float: right;
   text-decoration: none;
   color: var(--vscode-textLink-foreground);
 }
@@ -172,4 +186,22 @@ input::placeholder {
 .errorStack {
   display: block;
   position: relative;
+}
+
+.resourceGroupToggleContainer {
+  margin-top: 0.5em;
+}
+
+.radioButtonContainer {
+  display: flex;
+  padding-bottom: 1em;
+}
+
+.radioButtonLabel {
+  margin-right: 35px;
+}
+
+.radioButton {
+  margin-left: 0px;
+  margin-right: 5px;
 }

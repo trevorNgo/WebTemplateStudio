@@ -26,10 +26,12 @@ export default {
       : "0.5px solid var(--vscode-editor-foreground)",
     borderRadius: 0,
     boxShadow: "none",
-    background: "var(--vscode-input-background)",
+    background: "var(--vscode-editor-background)",
     "&:hover": {
       outline: "0.5px solid rgba(0,0,0,0.5)"
     },
+    fontSize: "1.2em",
+    padding: "5px",
     cursor: "pointer"
   }),
   option: (provided: any, state: any) => ({
@@ -61,6 +63,7 @@ export default {
     // kill the white space on first and last option
     padding: 0,
     background: "var(--vscode-editor-background)",
-    border: "0.5px solid var(--vscode-editor-foreground)"
+    border: "0.5px solid var(--vscode-editor-foreground)",
+    maxHeight: "130px"
   })
 };

@@ -17,15 +17,20 @@ export const CONSTANTS = {
       "error.resourceGroupNotFound",
       "No resource group found with this name"
     ),
+    RESOURCE_GROUP_TRIES_EXCEEDED: localize(
+      "error.resourceGroupTriesExceedeed",
+      "Number of tries exceeded for creating resource group"
+    ),
     SUBSCRIPTION_NOT_FOUND: localize(
       "error.subscriptionNotFound",
       "No subscription found with this name."
     ),
-    FUNCTION_APP_NAME_NOT_AVAILABLE: (functionName: string) => {
+    APP_NAME_NOT_AVAILABLE: (appName: string, type: string) => {
       return localize(
         "error.functionAppNameNotAvailable",
-        "Function app name {0} is not available",
-        functionName
+        "{1} app name {0} is not available",
+        appName,
+        type
       );
     },
     LOGOUT_FAILED: localize(
@@ -43,6 +48,10 @@ export const CONSTANTS = {
     SUBSCRIPTION_NOT_DEFINED: localize(
       "error.subscriptionNotDefined",
       "Subscription Item cannot have undefined values."
+    ),
+    AZURE_RESOURCE_CLIENT_NOT_DEFINED: localize(
+      "error.azureResourceClientNotDefined",
+      "Azure resource management client cannot be undefined"
     ),
     WEBSITE_CLIENT_NOT_DEFINED: localize(
       "error.websiteClientNotDefined",
@@ -64,10 +73,10 @@ export const CONSTANTS = {
       "error.functionsNoDuplicate",
       "No duplicates allowed for function names"
     ),
-    FUNCTIONS_INVALID_NAME: (name: string) => {
+    APP_INVALID_NAME: (name: string) => {
       return localize(
         "error.functionInvalidName",
-        "Invalid function name {0}. Name can only include alphanumeric characters and dashes, and must start/end with alphanumeric characters",
+        "Invalid name {0}. Name can only include alphanumeric characters and dashes, and must start/end with alphanumeric characters",
         name
       );
     },
@@ -133,10 +142,10 @@ export const CONSTANTS = {
         accountName
       );
     },
-    FUNCTION_APP_DEPLOYED: (appName: string) => {
+    APP_DEPLOYED: (appName: string, type: string) => {
       return localize(
         "info.functionAppDeployed",
-        "Function App {0} has been deployed and is ready to use!",
+        "{1} App {0} has been deployed and is ready to use!",
         appName
       );
     },
@@ -160,7 +169,24 @@ export const CONSTANTS = {
     SIGNALR_API_SYNC_METHOD_NAME: "SyncTemplates",
     SIGNALR_API_GENERATE_METHOD_NAME: "Generate",
     MAX_SYNC_REQUEST_ATTEMPTS: 51,
-    SYNC_RETRY_WAIT_TIME: 250
+    SYNC_RETRY_WAIT_TIME: 250,
+    ENDPOINTS: {
+      PAGE: "/api/page",
+      FEATURE: "/api/feature",
+      FRAMEWORK: "/api/framework",
+      PROJECT_TYPE: "/api/projectType"
+    },
+    METHODS: {
+      GET: "get",
+      POST: "post"
+    },
+    QUERY_PARAMS: {
+      FRONTEND_FRAMEWORK: "frontendFramework",
+      BACKEND_FRAMEWORK: "backendFramework",
+      PROJECT_TYPE: "projectType",
+      PLATFORM: "platform",
+      PATH: "path"
+    }
   },
   AZURE_LOGIN_STATUS: {
     LOGGED_IN: "LoggedIn",
@@ -188,6 +214,20 @@ export const CONSTANTS = {
   START_PORT: 9502,
   VSCODE_COMMAND: {
     OPEN_FOLDER: "vscode.openFolder"
+  },
+  DEPENDENCY_CHECKER: {
+    NODE: "node",
+    PYTHON: "python",
+    PYTHON3: "python3",
+    PYTHON_LAUNCHER: "py -3"
+  },
+  AZURE_LOCATION: {
+    CENTRAL_US: "Central US"
+  },
+  APP_SERVICE_DOMAIN: ".azurewebsites.net",
+  APP_NAME: {
+    MAX_LENGTH: 60,
+    MIN_LENGTH: 3
   }
 };
 
@@ -196,10 +236,12 @@ export enum ExtensionCommand {
   Login = "login",
   Logout = "logout",
   Subscriptions = "subscriptions",
-  SubscriptionDataForCosmos = "subscription-data-for-cosmos",
   SubscriptionDataForFunctions = "subscription-data-for-functions",
+  SubscriptionDataForCosmos = "subscription-data-for-cosmos",
+  SubscriptionDataForAppService = "subscription-data-for-app-service",
   NameFunctions = "name-functions",
   NameCosmos = "name-cosmos",
+  NameAppService = "name-app-service",
   DeployFunctions = "deploy-functions",
   DeployCosmos = "deploy-cosmos",
   Generate = "generate",
@@ -207,6 +249,8 @@ export enum ExtensionCommand {
   GetFunctionsRuntimes = "get-functions-runtimes",
   GetCosmosAPIs = "get-cosmos-apis",
   GetUserStatus = "get-user-status",
+  GetFrameworks = "get-frameworks",
+  GetPages = "get-pages",
   TrackPageSwitch = "track-page-switch",
   ProjectPathValidation = "project-path-validation",
   UpdateGenStatusMessage = "update-status-message",
@@ -216,7 +260,8 @@ export enum ExtensionCommand {
   CloseWizard = "close-wizard",
   GetPort = "get-port",
   ResetPages = "reset-pages",
-  GetPreviewStatus = "get-preview"
+  GetPreviewStatus = "get-preview",
+  CheckDependency = "check-dependency"
 }
 export enum ExtensionModule {
   Azure = "Azure",
@@ -224,7 +269,9 @@ export enum ExtensionModule {
   Telemetry = "Telemetry",
   Validator = "Validator",
   VSCodeUI = "VSCodeUI",
-  Logger = "Logger"
+  Logger = "Logger",
+  DependencyChecker = "DependencyChecker",
+  CoreTSModule = "CoreTSModule"
 }
 
 export enum TelemetryEventName {
@@ -235,6 +282,7 @@ export enum TelemetryEventName {
   EngineGeneration = "Engine-Generation-Time",
   CosmosDBDeploy = "Azure-Cosmos-Deployment",
   FunctionsDeploy = "Azure-Functions-Deployment",
+  ResourceGroupDeploy = "Azure-Resource-Group-Deployment",
   PageChange = "Wizard-Page-Change",
   SyncEngine = "Sync-Engine",
   ConnectionStringReplace = "Connection-String-Replaced",
@@ -279,9 +327,19 @@ export namespace DialogMessages {
     "dialog.resetPagesPrompt",
     "Switching Frameworks will reset pages in your queue. Are you sure you want to proceed?"
   );
+  export const logoutPrompt: string = localize(
+    "dialog.logoutPrompt",
+    "Are you sure you want to sign out of your Azure account?"
+  );
 }
 
 export enum AzureResourceType {
+  AppService = "app-service",
   Cosmos = "cosmos",
   Functions = "functions"
+}
+
+export enum AppType {
+  Web = "Web",
+  Function = "Function"
 }

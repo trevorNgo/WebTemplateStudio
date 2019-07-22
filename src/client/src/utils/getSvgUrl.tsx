@@ -14,10 +14,14 @@ import react from "../assets/react.svg";
 import angular from "../assets/angular.svg";
 import vue from "../assets/vue.svg";
 import node from "../assets/nodeJS.svg";
+import flask from "../assets/flask.svg";
 import azure from "../assets/azure.svg";
+import appservice from "../assets/appservice.svg";
 import azurefunctions from "../assets/azurefunctions.svg";
 import cancel from "../assets/cancel.svg";
 import cosmosdb from "../assets/cosmosdb.svg";
+import warning from "../assets/warning.svg";
+import greencheck from "../assets/checkgreen.svg";
 
 import masterdetailscreenshot from "../assets/masterdetailscreenshot.svg";
 import listscreenshot from "../assets/listscreenshot.svg";
@@ -29,6 +33,8 @@ const SVG_MAPPINGS = {
   [WIZARD_CONTENT_INTERNAL_NAMES.ANGULAR]: angular,
   [WIZARD_CONTENT_INTERNAL_NAMES.VUE]: vue,
   [WIZARD_CONTENT_INTERNAL_NAMES.NODE_JS]: node,
+  [WIZARD_CONTENT_INTERNAL_NAMES.FLASK]: flask,
+  [WIZARD_CONTENT_INTERNAL_NAMES.APP_SERVICE]: appservice,
   [WIZARD_CONTENT_INTERNAL_NAMES.AZURE_FUNCTIONS]: azurefunctions,
   [WIZARD_CONTENT_INTERNAL_NAMES.AZURE]: azure,
   [WIZARD_CONTENT_INTERNAL_NAMES.COSMOS_DB]: cosmosdb
@@ -114,3 +120,5 @@ export default (internalName: string): string | undefined => {
 };
 
 export const getCancelSvg = (): string => withLocalPath(cancel);
+export const getWarningSvg = (): string => withLocalPath(warning);
+export const getGreenCheckSvg = (): string => withLocalPath(greencheck);

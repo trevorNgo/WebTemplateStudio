@@ -8,6 +8,7 @@ import { getSvg } from "../../utils/getSvgUrl";
 import styles from "./styles.module.css";
 import grid from "../../css/grid.module.css";
 import backArrow from "../../assets/backarrow.svg";
+import { KEY_EVENTS } from "../../utils/constants";
 
 import { IOption } from "../../types/option";
 import { ILicenseObject, License } from "../../types/license";
@@ -18,6 +19,7 @@ import {
   InjectedIntl,
   FormattedMessage
 } from "react-intl";
+import keyUpHandler from "../../utils/keyUpHandler";
 
 interface IProps {
   detailInfo: IOption;
@@ -40,7 +42,7 @@ const Details = ({
   intl
 }: IProps) => {
   const LinkRenderer = (props: any) => (
-    <a href={props.href} className={styles.link}>
+    <a href={props.href} className={styles.link} onKeyUp={keyUpHandler}>
       {props.children}
     </a>
   );
@@ -50,8 +52,8 @@ const Details = ({
       <br />
     </React.Fragment>
   );
-  const keyDownHandler = (event: any) => {
-    if (event.keyCode === 13 || event.keyCode === 32) {
+  const keyDownHandler = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === KEY_EVENTS.ENTER || event.key === KEY_EVENTS.SPACE) {
       handleBackClick();
     }
   };
@@ -155,6 +157,7 @@ const Details = ({
                                 <a
                                   className={styles.link}
                                   href={licenseObject.url}
+                                  onKeyUp={keyUpHandler}
                                 >
                                   {licenseObject.text}
                                 </a>

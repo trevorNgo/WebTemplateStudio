@@ -27,6 +27,7 @@ import {
 } from "../../selectors/azureFunctionsServiceSelector";
 
 import { setVisitedWizardPageAction } from "../../actions/wizardInfoActions/setVisitedWizardPage";
+import { updateCreateProjectButtonAction } from "../../actions/wizardInfoActions/updateCreateProjectButton";
 import { openPostGenModalAction } from "../../actions/modalActions/modalActions";
 import { getVSCodeApiSelector } from "../../selectors/vscodeApiSelector";
 
@@ -47,9 +48,14 @@ import { ThunkDispatch } from "redux-thunk";
 import RootAction from "../../actions/ActionType";
 import { IFunctionName } from "../AzureFunctionsSelection";
 
+import { ReactComponent as NextArrow } from "../../assets/nextarrow.svg";
+import nextArrow from "../../assets/nextarrow.svg";
+import keyUpHandler from "../../utils/keyUpHandler";
+
 interface IDispatchProps {
   setRouteVisited: (route: string) => void;
   openPostGenModal: () => any;
+  updateCreateProjectButton: (enable: boolean) => any;
 }
 
 interface IStateProps {
@@ -62,6 +68,7 @@ interface IStateProps {
   isVisited: IVisitedPages;
   isValidNameAndProjectPath: boolean;
   functionNames?: IFunctionName[];
+  enableCreateProjectButton: boolean;
 }
 
 type Props = RouteComponentProps &
@@ -70,14 +77,13 @@ type Props = RouteComponentProps &
   InjectedIntlProps;
 
 const pathsNext: any = {
-  [ROUTES.NEW_PROJECT]: ROUTES.SELECT_PROJECT_TYPE,
-  [ROUTES.SELECT_PROJECT_TYPE]: ROUTES.SELECT_FRAMEWORKS,
+  [ROUTES.NEW_PROJECT]: ROUTES.SELECT_FRAMEWORKS,
   [ROUTES.SELECT_FRAMEWORKS]: ROUTES.SELECT_PAGES,
   [ROUTES.SELECT_PAGES]: ROUTES.AZURE_LOGIN,
   [ROUTES.AZURE_LOGIN]: ROUTES.REVIEW_AND_GENERATE
 };
 const pathsBack: any = {
-  [ROUTES.SELECT_FRAMEWORKS]: ROUTES.SELECT_PROJECT_TYPE,
+  [ROUTES.SELECT_FRAMEWORKS]: ROUTES.NEW_PROJECT,
   [ROUTES.SELECT_PAGES]: ROUTES.SELECT_FRAMEWORKS,
   [ROUTES.AZURE_LOGIN]: ROUTES.SELECT_PAGES,
   [ROUTES.REVIEW_AND_GENERATE]: ROUTES.AZURE_LOGIN
@@ -86,7 +92,7 @@ const pathsBack: any = {
 const messages = defineMessages({
   navAriaLabel: {
     id: "footer.navAriaLabel",
-    defaultMessage: "Navigate between pages and generate templates"
+    defaultMessage: "Navigate between pages and create project"
   }
 });
 
@@ -134,6 +140,19 @@ class Footer extends React.Component<Props> {
       setRouteVisited(pathsNext[pathname]);
     }
   };
+
+  public handleLinkBackClick = (
+    event: React.SyntheticEvent,
+    pathname: string
+  ) => {
+    const { setRouteVisited } = this.props;
+    this.trackPageForTelemetry(pathname);
+
+    if (pathname !== ROUTES.NEW_PROJECT) {
+      setRouteVisited(pathname);
+    }
+  };
+
   public trackPageForTelemetry = (pathname: string) => {
     this.props.vscode.postMessage({
       module: EXTENSION_MODULES.TELEMETRY,
@@ -173,9 +192,19 @@ class Footer extends React.Component<Props> {
       }
     }
 
-    const { isValidNameAndProjectPath, location, isVisited, intl } = this.props;
+    const {
+      isValidNameAndProjectPath,
+      location,
+      isVisited,
+      intl,
+      updateCreateProjectButton,
+      enableCreateProjectButton
+    } = this.props;
     const { pathname } = location;
     const { showFrameworks } = isVisited;
+    if (this.isReviewAndGenerate()) {
+      updateCreateProjectButton(true);
+    }
     return (
       <nav aria-label={intl.formatMessage(messages.navAriaLabel)}>
         {pathname !== ROUTES.PAGE_DETAILS && (
@@ -190,62 +219,67 @@ class Footer extends React.Component<Props> {
               )}
             </div>
             <div className={styles.buttonContainer}>
-              <Link
-                tabIndex={pathname === ROUTES.NEW_PROJECT ? -1 : 0}
-                className={classnames(buttonStyles.buttonDark, styles.button, {
-                  [styles.disabledOverlay]: pathname === ROUTES.NEW_PROJECT
-                })}
-                to={
-                  pathsBack[pathname] === undefined
-                    ? ROUTES.NEW_PROJECT
-                    : pathsBack[pathname]
-                }
-              >
-                <FormattedMessage id="footer.back" defaultMessage="Back" />
-              </Link>
-              <Link
-                tabIndex={
-                  !isValidNameAndProjectPath || this.isReviewAndGenerate()
-                    ? -1
-                    : 0
-                }
-                className={classnames(styles.button, {
-                  [buttonStyles.buttonDark]:
-                    this.isReviewAndGenerate() || !isValidNameAndProjectPath,
-                  [buttonStyles.buttonHighlightedBorder]: !this.isReviewAndGenerate(),
-                  [styles.disabledOverlay]:
-                    !isValidNameAndProjectPath || this.isReviewAndGenerate()
-                })}
-                onClick={event => {
-                  this.handleLinkClick(event, pathname);
-                }}
-                to={
-                  pathname === ROUTES.REVIEW_AND_GENERATE
-                    ? ROUTES.REVIEW_AND_GENERATE
-                    : pathsNext[pathname]
-                }
-              >
-                <FormattedMessage id="footer.next" defaultMessage="Next" />
-              </Link>
-              <button
-                disabled={
-                  pathname !== ROUTES.REVIEW_AND_GENERATE || !areValidNames
-                }
-                className={classnames(styles.button, {
-                  [buttonStyles.buttonDark]:
-                    !this.isReviewAndGenerate() || !areValidNames,
-                  [buttonStyles.buttonHighlightedBorder]:
-                    this.isReviewAndGenerate() && areValidNames,
-                  [styles.disabledOverlay]:
-                    !this.isReviewAndGenerate() || !areValidNames
-                })}
-                onClick={this.logMessageToVsCode}
-              >
-                <FormattedMessage
-                  id="footer.generate"
-                  defaultMessage="Generate Template"
-                />
-              </button>
+              {pathname !== ROUTES.NEW_PROJECT && (
+                <Link
+                  tabIndex={0}
+                  className={classnames(buttonStyles.buttonDark, styles.button)}
+                  onClick={event => {
+                    this.handleLinkBackClick(event, pathname);
+                  }}
+                  onKeyUp={keyUpHandler}
+                  to={
+                    pathsBack[pathname] === undefined
+                      ? ROUTES.NEW_PROJECT
+                      : pathsBack[pathname]
+                  }
+                >
+                  <FormattedMessage id="footer.back" defaultMessage="Back" />
+                </Link>
+              )}
+              {pathname !== ROUTES.REVIEW_AND_GENERATE && (
+                <Link
+                  tabIndex={isValidNameAndProjectPath ? 0 : -1}
+                  className={classnames(
+                    styles.button,
+                    styles.buttonNext,
+                    buttonStyles.buttonHighlightedBorder,
+                    {
+                      [buttonStyles.buttonDark]: !isValidNameAndProjectPath,
+                      [styles.disabledOverlay]: !isValidNameAndProjectPath
+                    }
+                  )}
+                  onClick={event => {
+                    this.handleLinkClick(event, pathname);
+                  }}
+                  onKeyUp={keyUpHandler}
+                  to={pathsNext[pathname]}
+                >
+                  <FormattedMessage id="footer.next" defaultMessage="Next" />
+                  {nextArrow && (
+                    <NextArrow
+                      className={classnames(styles.nextIcon, {
+                        [styles.nextIconNotDisabled]: isValidNameAndProjectPath
+                      })}
+                    />
+                  )}
+                </Link>
+              )}
+              {enableCreateProjectButton && (
+                <button
+                  disabled={!areValidNames}
+                  className={classnames(styles.button, {
+                    [buttonStyles.buttonDark]: !areValidNames,
+                    [buttonStyles.buttonHighlightedBorder]: areValidNames,
+                    [styles.disabledOverlay]: !areValidNames
+                  })}
+                  onClick={this.logMessageToVsCode}
+                >
+                  <FormattedMessage
+                    id="footer.generate"
+                    defaultMessage="Create Project"
+                  />
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -263,7 +297,8 @@ const mapStateToProps = (state: AppState): IStateProps => ({
   functionNames: getAzureFunctionsNamesSelector(state),
   functions: getAzureFunctionsOptionsSelector(state),
   isVisited: getIsVisitedRoutesSelector(state),
-  isValidNameAndProjectPath: isValidNameAndProjectPathSelector(state)
+  isValidNameAndProjectPath: isValidNameAndProjectPathSelector(state),
+  enableCreateProjectButton: state.wizardContent.createProjectButton
 });
 
 const mapDispatchToProps = (
@@ -274,6 +309,9 @@ const mapDispatchToProps = (
   },
   openPostGenModal: () => {
     dispatch(openPostGenModalAction());
+  },
+  updateCreateProjectButton: (enable: boolean) => {
+    dispatch(updateCreateProjectButtonAction(enable));
   }
 });
 

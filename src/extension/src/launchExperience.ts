@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { CONSTANTS } from "./constants";
-import { ApiModule } from "./signalr-api-module/apiModule";
+import { CoreTemplateStudio } from "./coreTemplateStudio";
 import { ISyncReturnType } from "./types/syncReturnType";
 import { IVSCodeProgressType } from "./types/vscodeProgressType";
 import { Logger } from "./utils/logger";
@@ -15,7 +15,7 @@ export class LaunchExperience {
   public async launchApiSyncModule(
     context: vscode.ExtensionContext
   ): Promise<ISyncReturnType> {
-    await ApiModule.StartApi(context);
+    await CoreTemplateStudio.GetInstance(context);
 
     LaunchExperience._progressObject.report({
       message: CONSTANTS.INFO.STARTING_GENERATION_SERVER
@@ -37,7 +37,7 @@ export class LaunchExperience {
       }
     }
     if (syncAttempts >= CONSTANTS.API.MAX_SYNC_REQUEST_ATTEMPTS) {
-      ApiModule.StopApi();
+      CoreTemplateStudio.DestroyInstance();
       throw new Error(CONSTANTS.ERRORS.TOO_MANY_FAILED_SYNC_REQUESTS);
     }
 
@@ -57,20 +57,27 @@ export class LaunchExperience {
       pathToTemplates = CONSTANTS.API.PRODUCTION_PATH_TO_TEMPLATES;
     }
 
-
-    return await ApiModule.ExecuteApiCommand({
-      port: ApiModule.GetLastUsedPort(),
-      payload: { path: pathToTemplates },
-      liveMessageHandler: this.handleSyncLiveData
-    })
+    let apiInstance = CoreTemplateStudio.GetExistingInstance();
+    return await apiInstance
+      .sync({
+        port: apiInstance.getPort(),
+        payload: { path: pathToTemplates },
+        liveMessageHandler: this.handleSyncLiveData
+      })
       .then((syncResult: any) => {
-        Logger.appendLog("EXTENSION", "info", "Successfully synced templates. Version: " + syncResult.templatesVersion);
+        Logger.appendLog(
+          "EXTENSION",
+          "info",
+          "Successfully synced templates. Version: " +
+            syncResult.templatesVersion
+        );
         return {
           successfullySynced: true,
           templatesVersion: syncResult.templatesVersion
         };
       })
-      .catch(() => {
+      .catch((error: Error) => {
+        Logger.appendLog("EXTENSION", "error", error.message);
         return { successfullySynced: false, templatesVersion: "" };
       });
   }

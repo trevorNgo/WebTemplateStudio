@@ -4,10 +4,11 @@ import { connect } from "react-redux";
 import { RouteComponentProps } from "react-router";
 import { withRouter } from "react-router-dom";
 import { injectIntl, InjectedIntlProps } from "react-intl";
+import { ThunkDispatch } from "redux-thunk";
+import classnames from "classnames";
 
 import RightSidebarDropdown from "../../components/RightSidebarDropdown";
 import ServicesSidebarItem from "../../components/ServicesSidebarItem";
-import Licenses from "../Licenses";
 import About from "../About";
 import SortablePageList from "../SortablePageList";
 
@@ -15,6 +16,7 @@ import { selectBackendFrameworkAction } from "../../actions/wizardSelectionActio
 import { selectFrontendFramework as selectFrontEndFrameworkAction } from "../../actions/wizardSelectionActions/selectFrontEndFramework";
 import { selectWebAppAction } from "../../actions/wizardSelectionActions/selectWebApp";
 import { selectPagesAction } from "../../actions/wizardSelectionActions/selectPages";
+import * as ModalActions from "../../actions/modalActions/modalActions";
 
 import { getServicesSelector } from "../../selectors/cosmosServiceSelector";
 import {
@@ -23,6 +25,7 @@ import {
 } from "../../selectors/wizardNavigationSelector";
 
 import styles from "./styles.module.css";
+import buttonStyles from "../../css/buttonStyles.module.css";
 import {
   ROUTES,
   EXTENSION_COMMANDS,
@@ -33,7 +36,6 @@ import messages from "./strings";
 import { ISelected } from "../../types/selected";
 import { AppState } from "../../reducers";
 import { SelectionState } from "../../reducers/wizardSelectionReducers";
-import { Dispatch } from "redux";
 import RootAction from "../../actions/ActionType";
 import { WizardContentType } from "../../reducers/wizardContentReducers";
 import { IOption } from "../../types/option";
@@ -46,6 +48,7 @@ interface IDispatchProps {
   selectFrontendFramework: (framework: ISelected) => void;
   selectProjectType: (projectType: ISelected) => void;
   selectPages: (pages: ISelected[]) => void;
+  openViewLicensesModal: () => any;
 }
 
 interface IRightSidebarProps {
@@ -111,6 +114,7 @@ class RightSidebar extends React.Component<Props, IRightSidebarState> {
       });
     }
   }
+
   /**
    * Changes the title of the page type that was chosen
    * Saves changes into the redux
@@ -136,36 +140,35 @@ class RightSidebar extends React.Component<Props, IRightSidebarState> {
     const {
       showFrameworks,
       showPages,
-      showProjectTypes,
       showServices
     } = this.props.isRoutesVisited;
     const { pathname } = this.props.location;
-    const { intl, contentOptions, isValidNameAndProjectPath } = this.props;
+    const {
+      intl,
+      contentOptions,
+      isValidNameAndProjectPath,
+      openViewLicensesModal
+    } = this.props;
     const { formatMessage } = intl;
-    const { frontendOptions, backendOptions, projectTypes } = contentOptions;
+    const { frontendOptions, backendOptions } = contentOptions;
+
     return (
       <React.Fragment>
-        {pathname !== ROUTES.PAGE_DETAILS && (
+        {pathname !== ROUTES.PAGE_DETAILS && pathname !== ROUTES.NEW_PROJECT && (
           <div
             role="complementary"
-            className={classNames(styles.container, styles.rightViewCropped)}
+            className={classNames(styles.container, styles.rightViewCropped, {
+              [styles.rightViewCroppedAllPages]:
+                pathname !== ROUTES.REVIEW_AND_GENERATE,
+              [styles.rightViewCroppedSummaryPage]:
+                pathname === ROUTES.REVIEW_AND_GENERATE
+            })}
           >
-            {pathname !== ROUTES.REVIEW_AND_GENERATE && (
-              <div>
+            {
+              <div className={styles.summaryContainer}>
                 <div className={styles.title}>
                   {formatMessage(messages.yourProjectDetails)}
                 </div>
-                <RightSidebarDropdown
-                  options={this.props.projectTypeDropdownItems}
-                  handleDropdownChange={this.handleChange.bind(this)}
-                  optionsData={projectTypes}
-                  selectDropdownOption={this.props.selectProjectType}
-                  isVisible={showProjectTypes}
-                  title={formatMessage(messages.projectType)}
-                  value={this.convertOptionToDropdownItem(
-                    this.props.selection.appType
-                  )}
-                />
                 <RightSidebarDropdown
                   options={this.props.frontendDropdownItems}
                   handleDropdownChange={
@@ -204,9 +207,22 @@ class RightSidebar extends React.Component<Props, IRightSidebarState> {
                   </div>
                 )}
               </div>
-            )}
-            <div>
-              <Licenses />
+            }
+            <div className={styles.container}>
+              {pathname !== ROUTES.REVIEW_AND_GENERATE && (
+                <div className={styles.buttonContainer}>
+                  <button
+                    className={classnames(
+                      buttonStyles.buttonDark,
+                      styles.button,
+                      styles.leftButton
+                    )}
+                    onClick={openViewLicensesModal}
+                  >
+                    {formatMessage(messages.viewLicenses)}
+                  </button>
+                </div>
+              )}
               <About />
             </div>
           </div>
@@ -254,7 +270,7 @@ const mapStateToProps = (state: AppState): IRightSidebarProps => ({
 });
 
 const mapDispatchToProps = (
-  dispatch: Dispatch<RootAction>
+  dispatch: ThunkDispatch<AppState, void, RootAction>
 ): IDispatchProps => ({
   selectBackendFramework: (framework: ISelected) => {
     dispatch(selectBackendFrameworkAction(framework));
@@ -267,6 +283,9 @@ const mapDispatchToProps = (
   },
   selectPages: (pages: ISelected[]) => {
     dispatch(selectPagesAction(pages));
+  },
+  openViewLicensesModal: () => {
+    dispatch(ModalActions.openViewLicensesModalAction());
   }
 });
 

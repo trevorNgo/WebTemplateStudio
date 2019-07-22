@@ -7,7 +7,7 @@ import {
   ExtensionCommand
 } from "./constants";
 import { ReactPanel } from "./reactPanel";
-import { ApiModule } from "./signalr-api-module/apiModule";
+import { CoreTemplateStudio } from "./coreTemplateStudio";
 import { VSCodeUI } from "./utils/vscodeUI";
 import { AzureServices } from "./azure/azureServices";
 import { TelemetryAI, IActionContext } from "./telemetry/telemetryAI";
@@ -16,8 +16,15 @@ import { WizardServant } from "./wizardServant";
 import { GenerationExperience } from "./generationExperience";
 import { IVSCodeProgressType } from "./types/vscodeProgressType";
 import { LaunchExperience } from "./launchExperience";
+import { DependencyChecker } from "./utils/dependencyChecker";
+import { CoreTSModule } from "./coreTSModule";
 
 export class Controller {
+  /**
+   * The singleton instance of Controller
+   * @type: {Controller}
+   */
+  private static _instance: Controller | undefined;
   public static reactPanelContext: ReactPanel;
   public static Telemetry: TelemetryAI;
   private vscodeUI: VSCodeUI;
@@ -25,6 +32,8 @@ export class Controller {
   private AzureService: AzureServices;
   private GenExperience: GenerationExperience;
   private Validator: Validator;
+  private DependencyChecker: DependencyChecker;
+  private CoreTSModule: CoreTSModule;
 
   /**
    *  Defines the WizardServant modules to which wizard client commands are routed
@@ -37,7 +46,9 @@ export class Controller {
       [ExtensionModule.Azure, this.AzureService],
       [ExtensionModule.Validator, this.Validator],
       [ExtensionModule.Generate, this.GenExperience],
-      [ExtensionModule.Logger, Controller.Logger]
+      [ExtensionModule.Logger, Controller.Logger],
+      [ExtensionModule.DependencyChecker, this.DependencyChecker],
+      [ExtensionModule.CoreTSModule, this.CoreTSModule]
     ]);
   }
 
@@ -66,8 +77,24 @@ export class Controller {
       vscode.window.showErrorMessage(CONSTANTS.ERRORS.INVALID_MODULE);
     }
   }
+  /**
+   * Provides access to the Controller. Maintains Singleton Pattern. Function will bring up ReactPanel to View if Controller instance exists, otherwise will instantiate a new Controller.
+   * @param message The payload received from the wizard client. Message payload must include field 'module'
+   * @returns Singleton Controller type
+   */
+  public static getInstance(
+    context: vscode.ExtensionContext,
+    extensionStartTime: number
+  ) {
+    if (this._instance) {
+      this._instance.showReactPanel();
+    } else {
+      this._instance = new Controller(context, extensionStartTime);
+    }
+    return this._instance;
+  }
 
-  constructor(
+  private constructor(
     private context: vscode.ExtensionContext,
     private extensionStartTime: number
   ) {
@@ -79,6 +106,8 @@ export class Controller {
     this.Validator = new Validator();
     this.AzureService = new AzureServices();
     this.GenExperience = new GenerationExperience(Controller.Telemetry);
+    this.DependencyChecker = new DependencyChecker();
+    this.CoreTSModule = new CoreTSModule();
     Logger.initializeOutputChannel(
       Controller.Telemetry.getExtensionName(this.context)
     );
@@ -106,12 +135,12 @@ export class Controller {
   ): Promise<void> {
     const syncObject = await Controller.Telemetry.callWithTelemetryAndCatchHandleErrors(
       TelemetryEventName.SyncEngine,
-      async function(this: IActionContext) {
+      async function (this: IActionContext) {
         return await launchExperience
           .launchApiSyncModule(context)
           .catch(error => {
             console.log(error);
-            ApiModule.StopApi();
+            CoreTemplateStudio.DestroyInstance();
             throw error;
           });
       }
@@ -151,7 +180,7 @@ export class Controller {
   }
 
   private static sendPortToClient() {
-    const port = ApiModule.GetLastUsedPort();
+    const port = CoreTemplateStudio.GetExistingInstance().getPort();
 
     Controller.reactPanelContext.postMessageWebview({
       command: ExtensionCommand.GetPort,
@@ -203,7 +232,8 @@ export class Controller {
     }
   }
 
-  dispose() {
-    ApiModule.StopApi();
+  static dispose() {
+    CoreTemplateStudio.DestroyInstance();
+    this._instance = undefined;
   }
 }

@@ -8,7 +8,6 @@ export interface IRoutes {
 
 const initialState = {
   [ROUTES.NEW_PROJECT]: true,
-  [ROUTES.SELECT_PROJECT_TYPE]: false,
   [ROUTES.SELECT_FRAMEWORKS]: false,
   [ROUTES.SELECT_PAGES]: false,
   [ROUTES.AZURE_LOGIN]: false,
@@ -26,8 +25,6 @@ const wizardNavigation = (
         [action.payload]: true
       };
       return newSelectionState;
-    case WIZARD_INFO_TYPEKEYS.RESET_WIZARD:
-      return initialState;
     default:
       return state;
   }
